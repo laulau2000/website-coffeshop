@@ -1,0 +1,23 @@
+# Contoh konfigurasi Nginx + PHP-FPM untuk KasirKu
+server {
+    listen 80;
+    server_name pos.contoh.com;
+    root /var/www/kasirku;
+    index index.php;
+    client_max_body_size 4m;
+
+    location ~ ^/(config|database|includes|storage|tests|tools|deploy)(/|$) { deny all; return 404; }
+    location ~ /\. { deny all; return 404; }
+    location ~* \.(sql|md|log|ini|lock|sh|bak)$ { deny all; return 404; }
+    location ~* ^/uploads/.*\.(php\d?|phtml|phar)$ { deny all; return 404; }
+
+    location / { try_files $uri $uri/ =404; }
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param HTTPS $https if_not_empty;
+    }
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options SAMEORIGIN always;
+}
